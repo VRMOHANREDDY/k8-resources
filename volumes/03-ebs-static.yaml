@@ -1,0 +1,13 @@
+apiVersion: v1   #Kubernetes API version for this object type
+kind: PersistentVolume # means you're creating a PV, which represents a real piece of storage in the cluster.
+metadata:
+  name: ebs-static  # is the name of the PV inside Kubernetes
+spec:
+  accessModes:
+  - ReadWriteOnce  # volume can be mounted read-write by pods on only one node at a time
+  capacity:
+    storage: 2Gi  # Kubernetes believes this volume has
+  csi:
+    driver: ebs.csi.aws.com  #names the AWS EBS CSI driver.
+    fsType: ext4  # is the filesystem to use.
+    volumeHandle: vol-0b39e9a8fde95bb6f  # actual AWS EBS volume ID.
