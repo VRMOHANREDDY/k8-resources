@@ -1,0 +1,24 @@
+apiVersion: v1    #Pod is a core Kubernetes resource
+kind: Pod         #Creates a bare Pod directly — no Deployment, so nothing auto-recreates it if it dies
+metadata:
+  name: nginx      #Name of the Pod itself (separate from either container's name)
+spec:
+  containers:     # container -1 nginx
+  - image: nginx      #Pulls the official nginx image — runs a real web server
+    name: nginx               #Container's own name inside the Pod — used for kubectl logs nginx -c nginx
+    volumeMounts:
+    - mountPath: /var/log/nginx   #nginx's real, default log directory
+      name: nginx-logs            #Links to the shared volume defined later in the Pod spec
+
+  - image: almalinux:9          #  container -2  almalinux A plain Linux OS image — no specific app running
+    name: almalinux
+    command: ["sleep", "1000"]  #Overrides the default startup so the container stays alive ~1000s 
+    volumeMounts:
+    - mountPath: /mnt/nginx-logs  #Same shared volume as nginx, but mounted at a different path 
+      name: nginx-logs
+      readOnly: true             #Can read the shared logs, but can't modify or delete them
+  volumes:
+  - name: nginx-logs   # Must match the name used in both containers' volumeMounts — this is what links them together
+    # this creates intially empty directory in the node where pod scheduled
+    emptyDir:
+      sizeLimit: 500Mi  # Caps the volume at 500Mi; exceeding it can get the Pod evicted
