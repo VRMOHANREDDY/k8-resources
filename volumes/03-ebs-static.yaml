@@ -11,3 +11,36 @@ spec:
     driver: ebs.csi.aws.com  #names the AWS EBS CSI driver.
     fsType: ext4  # is the filesystem to use.
     volumeHandle: vol-0b39e9a8fde95bb6f  # actual AWS EBS volume ID.
+
+apiVersion: v1  # means PVCs are part of the core Kubernetes API
+kind: PersistentVolumeClaim  # means you're creating a claim
+metadata:
+  name: ebs-static  # Is the name of this PVC. Your pod will refer to it by this name
+spec:
+  storageClassName: "" # Empty string must be explicitly set otherwise default StorageClass will be set
+  volumeName: ebs-static  # tells Kubernetes to bind this claim to the PV named ebs-static
+  accessModes:
+    - ReadWriteOnce # must match what the PV offers. The PV said
+  resources:
+    requests:
+      storage: 2Gi  # is how much storage the claim needs.
+
+apiVersion: v1  # means Pods are part of the core Kubernetes API.
+kind: Pod  # means you're creating a Pod
+metadata:
+  name: ebs-static # is the Pod's name. Again, it just happens to match the PV and PVC names.
+spec:
+  containers:
+  - name: nginx  # is the container's name inside the Pod.
+    image: nginx # means Kubernetes pulls the official nginx web server image from Docker Hub.
+    volumeMounts:
+    - name: persistent-storage # refers to a volume defined further down
+      mountPath: /usr/share/nginx/html # is the folder inside the container where the EBS disk appears.
+  volumes:
+  - name: persistent-storage # is the name the volumeMounts section refers to.
+    persistentVolumeClaim:
+      claimName: ebs-static # means "use the PVC named ebs-static." That PVC is bound to the PV, which points to your EBS volume.
+  nodeSelector:
+    topology.kubernetes.io/zone: us-east-1b # means only schedule the Pod on a node in the us-east-1b Availability Zone.
+
+    
