@@ -1,0 +1,34 @@
+apiVersion: apps/v1     # DaemonSet lives in the apps API group
+kind: DaemonSet         # Runs exactly one copy of this Pod on every Node in the cluster
+metadata:               # Start of the DaemonSet's own identifying info
+  name: fluentd-elasticsearch  #Name of this DaemonSet
+  namespace: kube-system # admin namespace 
+  labels:                  #Tags attached to the DaemonSet itself
+    k8s-app: fluentd-logging  #A label identifying this as the fluentd logging component
+spec:                           # Start of the DaemonSet's actual configuration
+  selector:              # Tells the DaemonSet which Pods it owns
+    matchLabels:         #Must exactly match the Pod template's labels below
+      name: fluentd-elasticsearch  # The matching label key/value
+  template:             # The Pod spec that gets run on every Node
+    metadata:         # The Pod's own metadata
+      labels:
+        name: fluentd-elasticsearch  # Must match selector.matchLabels above
+    spec:  # The Pod's container spec
+      containers:           # List of containers in this Pod
+      - name: fluentd-elasticsearch    # Container's name
+        image: quay.io/fluentd_elasticsearch/fluentd:v5.0.1  # Image,pulled from the Quay registry instead of Docker Hub
+        resources:        # Compute resource controls for this container
+          limits:         # Maximum resources the container is allowed to use
+            memory: 200Mi # Hard cap — container gets killed (OOMKilled) if it exceeds 200Mi memory
+          requests:
+            cpu: 100m
+            memory: 200Mi  # Reserves 200Mi memory upfront
+        volumeMounts:  # Volumes this container wants mounted
+        - name: varlog
+          mountPath: /var/log  # Where inside the container this volume appears
+          readOnly: true
+      volumes:        # Defined once at the Pod level
+      - name: varlog
+      # underlying host where pod is scheduled
+        hostPath:
+          path: /var/log # The exact path on the Node being exposed — this Node's actual system log directory
