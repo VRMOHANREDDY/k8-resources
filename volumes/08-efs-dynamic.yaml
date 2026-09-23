@@ -1,0 +1,28 @@
+---                                   # start of first object
+apiVersion: v1                        # core Kubernetes API version
+kind: PersistentVolumeClaim           # creating a request for storage
+metadata:
+  name: efs-dynamic                   # name of this PVC
+spec:
+  accessModes:
+    - ReadWriteMany                   # many pods on many nodes can use it together
+  storageClassName: efs-sc            # use the EFS StorageClass to auto-create storage
+  resources:
+    requests:
+      storage: 5Gi                    # required field, but EFS ignores the size
+---                                   # separator
+apiVersion: v1                        # core Kubernetes API version
+kind: Pod                             # creating a Pod
+metadata:
+  name: efs-dynamic                   # name of this Pod
+spec:
+  containers:
+    - name: nginx                     # container name
+      image: nginx                    # use the nginx image
+      volumeMounts:
+        - name: persistent-storage    # which volume to mount
+          mountPath: /data            # EFS folder appears at /data inside the container
+  volumes:
+    - name: persistent-storage        # volume name used above
+      persistentVolumeClaim:
+        claimName: efs-dynamic        # use the PVC named efs-dynamic
