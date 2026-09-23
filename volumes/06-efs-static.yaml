@@ -14,3 +14,30 @@ spec:
     driver: efs.csi.aws.com             # use the AWS EFS CSI driver
     volumeHandle: efs:fs-05406b53e8fdfa023  # ID of your existing EFS file system
 ---                                     # separator
+apiVersion: v1                          # core Kubernetes API version
+kind: PersistentVolumeClaim             # creating a request for storage
+metadata:
+  name: efs-static                      # name of this PVC
+spec:
+  accessModes:
+    - ReadWriteMany                     # must match the PV
+  storageClassName: ""                  # empty = bind to an existing static PV
+  resources:
+    requests:
+      storage: 5Gi                      # must be ≤ PV size (dummy for EFS)
+---                                     # separator
+apiVersion: v1                          # core Kubernetes API version
+kind: Pod                               # creating a Pod
+metadata:
+  name: efs-static                      # name of this Pod
+spec:
+  containers:
+  - name: nginx                         # container name
+    image: nginx                        # use the nginx image
+    volumeMounts:
+    - name: persistent-storage          # which volume to mount
+      mountPath: /usr/share/nginx/html  # where EFS appears inside the container
+  volumes:
+  - name: persistent-storage            # volume name used above
+    persistentVolumeClaim:
+      claimName: efs-static             # use the PVC named efs-static
