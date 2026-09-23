@@ -1,0 +1,10 @@
+kind: StorageClass                    # creating a StorageClass (auto-create storage)
+apiVersion: storage.k8s.io/v1         # StorageClass belongs to the storage API group
+metadata:
+  name: efs-sc                        # name PVCs will use in storageClassName
+provisioner: efs.csi.aws.com          # AWS EFS CSI driver creates the storage
+parameters:
+  provisioningMode: efs-ap            # create a new EFS Access Point for each PVC
+  fileSystemId: fs-02244aa8874f08a55  # your existing EFS file system ID
+  directoryPerms: "700"               # folder permissions: only the owner can read/write/enter
+  basePath: "/roboshop"               # (optional) all PVC folders are created under this path
