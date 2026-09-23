@@ -1,0 +1,7 @@
+apiVersion: storage.k8s.io/v1 #It belongs to storage.k8s.io API group, version v1.
+kind: StorageClass  # means you're creating a StorageClass
+metadata:
+  name: roboshop-ebs  # is the StorageClass's name. PVCs will refer to it with
+provisioner: ebs.csi.aws.com # names who creates the storage. This is the AWS EBS CSI driver
+reclaimPolicy: Retain # keeps the EBS volume (and your data) in AWS
+volumeBindingMode: WaitForFirstConsumer # controls when the EBS volume gets created.
