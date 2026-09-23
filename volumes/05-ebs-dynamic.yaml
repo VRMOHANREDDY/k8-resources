@@ -1,0 +1,27 @@
+apiVersion: v1                        # core Kubernetes API version
+kind: PersistentVolumeClaim           # creating a request for storage
+metadata:
+  name: ebs-dynamic                   # name of this PVC
+spec:
+  accessModes:
+    - ReadWriteOnce                   # only one node can use it at a time
+  storageClassName: roboshop-ebs      # use this StorageClass to auto-create EBS
+  resources:
+    requests:
+      storage: 6Gi                    # ask for a 6Gi disk
+---                                   # separator between two objects
+apiVersion: v1                        # core Kubernetes API version
+kind: Pod                             # creating a Pod
+metadata:
+  name: ebs-dynamic                   # name of this Pod
+spec:
+  containers:
+  - name: nginx                       # container name
+    image: nginx                      # use the nginx image
+    volumeMounts:
+    - name: persistent-storage        # which volume to mount (defined below)
+      mountPath: /usr/share/nginx/html  # where the disk appears inside the container
+  volumes:
+  - name: persistent-storage          # volume name used above
+    persistentVolumeClaim:
+      claimName: ebs-dynamic          # use the PVC named ebs-dynamic
