@@ -1,0 +1,47 @@
+apiVersion: v1                          # core Kubernetes API version
+kind: Service                           # creating a Service (network access to pods)
+metadata:
+  name: nginx                           # name of the Service
+  labels:
+    app: nginx                          # label on the Service itself
+spec:
+  ports:
+  - port: 80                            # port the Service listens on
+    name: web                           # name for this port
+  clusterIP: None                       # headless: no single IP, each pod gets its own DNS name
+  selector:
+    app: nginx                          # send traffic to pods with label app=nginx
+---                                     # separator
+apiVersion: apps/v1                     # StatefulSets belong to the "apps" API group
+kind: StatefulSet                       # creating a StatefulSet (for apps that need stable identity/storage)
+metadata:
+  name: web                             # name of the StatefulSet
+spec:
+  selector:
+    matchLabels:
+      app: nginx                        # manage pods with label app=nginx
+  serviceName: "nginx"                  # use the headless Service above for pod DNS names
+  replicas: 3                           # run 3 pods
+  template:                             # blueprint for each pod
+    metadata:
+      labels:
+        app: nginx                      # label on each pod (must match selector)
+    spec:
+      containers:
+      - name: nginx                     # container name
+        image: nginx                    # use the nginx image
+        ports:
+        - containerPort: 80             # port the container listens on
+          name: web                     # name for this port
+        volumeMounts:
+        - name: www                     # mount the volume named www (from template below)
+          mountPath: /usr/share/nginx/html  # where the disk appears in the container
+  volumeClaimTemplates:                 # auto-create one PVC per pod
+  - metadata:
+      name: www                         # PVC name prefix
+    spec:
+      accessModes: [ "ReadWriteOnce" ]  # one node at a time (EBS)
+      storageClassName: "roboshop-ebs"  # use your EBS StorageClass to auto-create disks
+      resources:
+        requests:
+          storage: 1Gi                  # each pod gets its own 1Gi disk
