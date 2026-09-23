@@ -1,0 +1,16 @@
+apiVersion: v1                          # core Kubernetes API version
+kind: PersistentVolume                  # creating a PV for an existing EFS
+metadata:
+  name: efs-static                      # name of this PV
+spec:
+  capacity:
+    storage: 5Gi                        # required field, but EFS ignores it (EFS has no size limit)
+  volumeMode: Filesystem                # mount as a normal folder (not a raw disk)
+  accessModes:
+    - ReadWriteMany                     # many pods on many nodes can read/write at the same time
+  storageClassName: ""                  # empty = static, don't auto-create anything
+  persistentVolumeReclaimPolicy: Retain # keep EFS data even if PVC is deleted
+  csi:
+    driver: efs.csi.aws.com             # use the AWS EFS CSI driver
+    volumeHandle: efs:fs-05406b53e8fdfa023  # ID of your existing EFS file system
+---                                     # separator
